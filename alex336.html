@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reproductor HD Metálico Brillante con Voz en Vivo - DonReseller</title>
+  <!-- jQuery needed for AJAX & JSONP calls -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* --- Ciclo Automático de 8 Colores Fluido --- */
+    @keyframes colorMorph {
+      0%   { --theme-main: #3fff4a; --theme-dark: #0f6614; --theme-glow: rgba(63,255,74,0.9); }   /* Verde */
+      12.5%{ --theme-main: #2eb2ff; --theme-dark: #0b4a7a; --theme-glow: rgba(46,178,255,0.9); }  /* Azul */
+      25%  { --theme-main: #ffffff; --theme-dark: #888888; --theme-glow: rgba(255,255,255,1); }    /* Blanco */
+      37.5%{ --theme-main: #ff3b44; --theme-dark: #8f070e; --theme-glow: rgba(255,59,68,0.9); }   /* Rojo */
+      50%  { --theme-main: #00f0ff; --theme-dark: #006870; --theme-glow: rgba(0,240,255,0.9); }   /* Celeste */
+      62.5%{ --theme-main: #ffd700; --theme-dark: #8a7300; --theme-glow: rgba(255,215,0,0.9); }   /* Amarillo */
+      75%  { --theme-main: #ff7f00; --theme-dark: #8a4200; --theme-glow: rgba(255,127,0,0.9); }   /* Naranja */
+      87.5%{ --theme-main: #ff69b4; --theme-dark: #8a2b5e; --theme-glow: rgba(255,105,180,0.9); } /* Rosado */
+      100% { --theme-main: #3fff4a; --theme-dark: #0f6614; --theme-glow: rgba(63,255,74,0.9); }   /* Verde */
+    }
+
+    @property --theme-main { syntax: '<color>'; inherits: true; initial-value: #ff3b44; }
+    @property --theme-dark { syntax: '<color>'; inherits: true; initial-value: #8f070e; }
+    @property --theme-glow { syntax: '<color>'; inherits: true; initial-value: rgba(255,59,68,0.9); }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      animation: colorMorph 24s infinite linear;
+      background:radial-gradient(circle at 50% 40%,#222,#0a0a0a);
+      display:flex;align-items:center;justify-content:center;min-height:100vh;
+      font-family:Arial,Helvetica,sans-serif;
+      overflow-x:hidden;
+    }
+
+    .player-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- Disco CD / Vinilo Brillante Deslizante --- */
+    .cd-record {
+      position: absolute;
+      right: 10px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, #222 0%, #111 40%, #000 70%);
+      border-radius: 50%;
+      z-index: 0;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.9), 0 0 20px var(--theme-glow);
+      border: 3px solid var(--theme-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s ease;
+      transform: translateX(0) rotate(0deg);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .cd-record.is-playing {
+      transform: translateX(130px) rotate(360deg);
+      opacity: 1;
+      animation: spinCD 3.5s linear infinite;
+    }
+    @keyframes spinCD {
+      0% { transform: translateX(130px) rotate(0deg); }
+      100% { transform: translateX(130px) rotate(360deg); }
+    }
+    .cd-grooves {
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.3);
+      background: repeating-radial-gradient(circle, transparent, transparent 3px, rgba(255,255,255,0.08) 4px, transparent 5px);
+    }
+    .cd-center {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      overflow: hidden;
+      z-index: 2;
+      box-shadow: 0 0 12px var(--theme-glow);
+    }
+    .cd-center img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* --- Reproductor Principal Hiper-Brillante --- */
+    .player{
+      position:relative;width:374px;height:246px;border-radius:14px;overflow:hidden;color:#fff;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 35%, rgba(0,0,0,0.2) 50%, rgba(255,255,255,0.25) 100%),
+        linear-gradient(160deg, var(--theme-main) 0%, var(--theme-dark) 45%, #1a0204 70%, var(--theme-main) 100%);
+      border:3px solid rgba(255,255,255,0.8);
+      background-clip:padding-box;
+      box-shadow:0 0 0 3px rgba(255,255,255,0.9), 0 0 0 6px var(--theme-dark), 0 15px 35px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.8), inset 0 -2px 5px rgba(0,0,0,0.6);
+      z-index: 2;
+      transition: background 1s ease, box-shadow 1s ease;
+    }
+
+    /* Reflejo superior estilo cristal */
+    .player:after{
+      content:'';position:absolute;left:0;right:0;top:29px;height:100px;z-index:0;
+      background:linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0) 100%);
+      border-radius:0 0 50% 50%/0 0 30px 30px;
+      pointer-events: none;
+    }
+
+    .topbar{
+      position:absolute;top:0;left:0;right:0;height:29px;z-index:1;
+      background:linear-gradient(#ffffff 0%,#f0f0f0 45%,#cccccc 50%,#ffffff 100%);
+      border-bottom:1px solid var(--theme-dark);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,1);
+    }
+
+    .swoosh{
+      position:absolute;left:44px;top:0;width:150px;height:56px;z-index:1;
+      border-radius:0 0 75px 75px / 0 0 56px 56px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.6) 0%, var(--theme-main) 20%, var(--theme-dark) 70%, #0d0102 100%);
+      box-shadow:0 3px 8px rgba(0,0,0,0.7), inset 0 3px 6px rgba(255,255,255,0.8);
+      transition: background 1s ease;
+    }
+
+    .top{position:absolute;top:0;left:0;right:0;height:56px;z-index:2}
+    
+    .menu{
+      position:absolute;left:8px;top:3px;width:23px;height:23px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+      padding:3px;border-radius:4px;background:linear-gradient(#fff,#d8d8d8);border:1px solid #444;box-shadow:inset 0 1px 0 #fff, 0 0 5px rgba(255,255,255,0.8);
+    }
+    .menu i{
+      background: var(--theme-main);
+      border-radius:50%;
+      box-shadow: 0 0 6px var(--theme-main), 0 0 10px var(--theme-glow);
+      transition: background 1s ease, box-shadow 1s ease;
+    }
+
+    /* Insignia HD Hiper-Brillante */
+    .hd{
+      position:absolute;left:79px;top:19px;width:66px;height:27px;border-radius:50%;
+      background:linear-gradient(135deg,#ffffff 0%,#f2f2f2 40%,#ffd7d9 50%,#d9d9d9 60%,#ffffff 100%);
+      box-shadow:0 2px 8px rgba(255,255,255,1), inset 0 0 0 1px #fff, 0 0 16px var(--theme-glow);
+      display:flex;align-items:center;justify-content:center;
+      font:italic 900 21px Arial Black,Arial;color:var(--theme-dark);letter-spacing:-1px;
+      text-shadow:0 1px 0 #fff, 0 0 10px var(--theme-glow);
+      animation: hdGlowPulse 2.5s ease-in-out infinite alternate;
+      overflow: hidden;
+      transition: color 1s ease, box-shadow 1s ease;
+    }
+    .hd::after{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0) 100%);
+      transform:rotate(30deg) translateX(-100%);
+      animation: hdShineSweep 3.5s ease-in-out infinite;
+    }
+    @keyframes hdGlowPulse {
+      0% { filter: brightness(1.05); }
+      100% { filter: brightness(1.3); }
+    }
+    @keyframes hdShineSweep {
+      0% { transform: rotate(30deg) translateX(-100%); }
+      25% { transform: rotate(30deg) translateX(100%); }
+      100% { transform: rotate(30deg) translateX(100%); }
+    }
+
+    .site{position:absolute;right:10px;top:6px;font-size:12.5px;font-weight:bold;color:#1c1e21;text-shadow:0 1px 0 rgba(255,255,255,.9)}
+    .live{
+      position:absolute;right:14px;top:38px;font-size:12px;font-weight:bold;z-index:2;
+      color:var(--theme-main);text-shadow:0 0 6px var(--theme-glow), 0 1px 2px #000;
+      transition: color 1s ease, text-shadow 1s ease;
+    }
+        
+    .thumb{
+      position:absolute;left:17px;top:73px;width:74px;height:76px;z-index:2;
+      border:2px solid #fff;outline:1px solid var(--theme-dark);
+      box-shadow:0 4px 10px rgba(0,0,0,0.8), inset 0 0 8px rgba(255,255,255,0.5), 0 0 10px var(--theme-glow);
+      overflow: hidden;
+      transition: outline-color 1s ease, box-shadow 1s ease;
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+        
+    .num{position:absolute;left:100px;top:76px;font:italic 13px Arial;z-index:2;color:#fff;text-shadow:0 1px 3px #000}
+    
+    canvas{
+      position:absolute;left:100px;top:68px;z-index:1;border-radius:3px;
+      box-shadow:inset 0 0 0 1px #111, 0 1px 4px rgba(255,255,255,0.5), 0 0 8px var(--theme-glow);
+    }
+
+    .marquee{
+      position:absolute;left:20px;right:34px;top:150px;height:16px;overflow:hidden;z-index:2;
+      font:13px "Courier New",monospace;letter-spacing:1px;white-space:nowrap;color:#ffffff;
+      text-shadow:0 0 5px var(--theme-glow), 0 1px 2px #000;
+    }
+    .marquee span{display:inline-block;padding-left:100%;animation:mq 12s linear infinite}
+    @keyframes mq{to{transform:translateX(-100%)}}
+    
+    .social{position:absolute;right:0;top:73px;width:20px;z-index:3;display:flex;flex-direction:column;gap:4px}
+    .social a{
+      display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px 0 0 3px;
+      color:#fff;font:bold 12px Arial;text-decoration:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .fb{background:linear-gradient(#6b8bc7,#2d4373)}.tw{background:linear-gradient(#7cd7ff,#1e8cc0)}.ml{background:linear-gradient(#7fafee,#1f4a85)}
+    
+    .bottom{
+      position:absolute;left:0;right:0;bottom:0;height:70px;z-index:2;
+      background:repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 1px,rgba(0,0,0,.03) 1px 2px),
+                 linear-gradient(to bottom, #ffffff 0%, #f0f0f0 48%, #d0d0d0 52%, #ffffff 100%);
+      border-radius:60px 60px 0 0 / 22px 22px 0 0;
+      box-shadow:0 -4px 12px rgba(0,0,0,0.6), inset 0 2px 4px #fff;
+    }
+    
+    .btn{
+      position:absolute;top:30px;width:28px;height:22px;border-radius:5px;border:1px solid #333;
+      background:linear-gradient(#fff 0%,#f6f6f6 48%,#d6d6d6 52%,#fff 100%);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:3px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 #fff, 0 0 6px var(--theme-glow);
+      transition: box-shadow 1s ease;
+    }
+    .btn:active{transform:translateY(1px);box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+    .btn.pause{left:25px}.btn.stop{left:60px}
+    .pause i{width:3px;height:10px;background:var(--theme-dark);transition: background 1s ease;}
+    .stop i{width:10px;height:10px;background:var(--theme-dark);transition: background 1s ease;}
+    
+    .info{position:absolute;left:115px;top:6px;font-size:8px;line-height:10px;color:#333}
+    .info .r{position:absolute;left:62px;white-space:nowrap}
+    
+    .digital-datetime{
+      position:absolute; left:115px; top:28px;
+      font-size:10px; font-weight:bold; color:var(--theme-dark);
+      text-shadow:0 0 4px var(--theme-glow), 0 1px 0 rgba(255,255,255,1);
+      font-family: 'Courier New', monospace;
+      transition: color 1s ease, text-shadow 1s ease;
+    }
+
+    .time{position:absolute;left:100px;top:46px;font-size:11px;font-weight:bold;color:#15171a;text-shadow:0 1px 0 rgba(255,255,255,.9)}
+    
+    .knob{
+      position:absolute;right:30px;top:8px;width:50px;height:50px;border-radius:50%;cursor:pointer;
+      background:conic-gradient(from 0deg,#fff,#b0b0b0,#fff,#e0e0e0,#fff,#b0b0b0,#fff,#e0e0e0,#fff);
+      border:2px solid var(--theme-dark);
+      box-shadow:0 4px 10px rgba(0,0,0,0.7), inset 0 0 0 3px rgba(255,255,255,0.8), 0 0 10px var(--theme-glow);
+      transition: border-color 1s ease, box-shadow 1s ease;
+    }
+    .knob:after{
+      content:"";position:absolute;inset:9px;border-radius:50%;
+      background:radial-gradient(circle at 40% 30%, #fff 0%, var(--theme-main) 30%, var(--theme-dark) 80%, #111 100%);
+      box-shadow:inset 0 2px 4px rgba(255,255,255,0.8), 0 0 8px var(--theme-glow);
+      transition: background 1s ease;
+    }
+    .knob:before{
+      content:"";position:absolute;left:calc(50% - 1.5px);top:50%;width:3px;height:17px;background:#ffffff;border-radius:2px;z-index:2;
+      transform-origin:50% 0;transform:rotate(var(--r,200deg));
+      box-shadow: 0 0 5px #fff;
+    }
+    .vol{position:absolute;right:12px;top:48px;font-size:10px;color:#111;font-weight:bold}
+
+    #artistName, #songTitle { display: none; }
+  </style>
+</head>
+<body>  
+  <div class="player-wrapper">
+    <!-- Disco CD / Vinilo brillante deslizante -->
+    <div class="cd-record" id="cdRecord">
+      <div class="cd-grooves"></div>
+      <div class="cd-center">
+        <img id="cdImgTrack" src="http://imgfz.com/i/zEN859j.jpeg" alt="CD Art">
+      </div>
+    </div>
+
+    <!-- Etiqueta de audio configurada -->
+    <audio id="audioRadio" crossorigin="anonymous">
+      <source src="https://usa14.fastcast4u.com/proxy/radiomelodias28?mp=/1" type="audio/mpeg">
+    </audio>
+
+    <div class="player">
+      <div class="topbar"></div>
+      <div class="swoosh"></div>
+      <div class="top">
+        <div class="menu">
+          <i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i>
+        </div>
+        <div class="hd">HD</div>
+        <div class="site">Radio Melodias de Dios</div>
+      </div>
+      <div class="live">LIVE</div>              
+      
+      <!-- Contenedor de la carátula -->
+      <div class="thumb">
+        <img id="imgTrack" src="http://imgfz.com/i/zEN859j.jpeg" alt="Artista">
+      </div>  
+      <div class="num" id="num">10</div>
+      <canvas id="viz" width="238" height="80"></canvas>              
+      <div class="marquee"><span id="title">Wilo De New - EL Meneaito (DJ Remix)</span></div>              
+      
+      <div id="artistName"></div>
+      <div id="songTitle"></div>
+      
+      <div class="social">
+        <a class="fb" href="#">f</a><a class="tw" href="#">t</a><a class="ml" href="#">&#9993;</a>
+      </div>
+      
+      <div class="bottom">
+        <div class="btn pause" id="pp" title="Pausa"><i></i><i></i></div>
+        <div class="btn stop" id="st" title="Stop"><i></i></div>
+        <div class="info">
+          <div>DC:0</div>
+          <div class="r" style="top:0">BF:100%</div>
+          <div class="r" style="top:9px">USR:ON</div>
+        </div>
+        <!-- Fecha, Hora y Año Digital Inferior en tiempo real -->
+        <div class="digital-datetime" id="digitalDateTime">16/10/2026 15:34:00</div>
+        
+        <div class="time" id="time">00:00:21</div>
+        <div class="knob" id="knob"></div>
+        <div class="vol" id="vol">0.8</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var cv=document.getElementById('viz'),c=cv.getContext('2d');
+  var N=34,bw=6,gap=1,H=80,levels=[],peaks=[],playing=true,t=0;
+  var audio = document.getElementById('audioRadio');
+  var cdRecord = document.getElementById('cdRecord');
+
+  for(var i=0;i<N;i++){levels.push(0);peaks.push(0);}  
+  
+  function draw(){
+    c.clearRect(0,0,cv.width,H);
+    c.fillStyle='rgba(8,10,14,.85)';c.fillRect(0,0,cv.width,H);
+    t+=.08;
+    for(var i=0;i<N;i++){
+      var env=Math.exp(-Math.pow((i-N/2)/(N/3),2));
+      var target=playing?(env*(.45+.45*Math.random())+.05*Math.sin(t+i))*H*.8:0;
+      levels[i]+=(target-levels[i])*.35;
+      if(levels[i]>peaks[i])peaks[i]=levels[i];else peaks[i]=Math.max(0,peaks[i]-.6);
+      var x=i*(bw+gap)+2,rows=Math.floor(levels[i]/4);
+      for(var r=0;r<rows;r++){
+        var y=H-4-r*4,p=r/20;
+        c.fillStyle=p<.35?'#3fcf3a':p<.6?'#e8e020':p<.8?'#f09a1a':'#e03a1a';
+        c.fillRect(x,y,bw,3);
+      }
+      c.fillStyle='#ffffff';c.fillRect(x,H-6-peaks[i],bw,2);
+    }
+    c.beginPath();c.strokeStyle='#ffffff';c.lineWidth=1;
+    for(var x=0;x<cv.width;x+=3){
+      var e=Math.exp(-Math.pow((x-cv.width*.5)/(cv.width*.3),2));
+      var y=18+(playing?Math.sin(x*.5+t*3)*Math.random()*14*e+Math.sin(x*.12+t)*4:0);
+      x?c.lineTo(x,y):c.moveTo(x,y);
+    }
+    c.stroke();
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  var sec=21,tm=document.getElementById('time');
+  function fmt(n){return n<10?'0'+n:n}
+  function show(){tm.textContent=fmt(Math.floor(sec/3600))+':'+fmt(Math.floor(sec/60)%60)+':'+fmt(sec%60)}
+  setInterval(function(){if(playing){sec++;show();}},1000);
+
+  var cd=10,numEl=document.getElementById('num');
+  setInterval(function(){if(!playing)return;cd=cd<=0?10:cd-1;numEl.textContent=cd;},1000);
+
+  // Reloj digital inferior dinámico
+  function updateDateTime() {
+    const now = new Date();
+    const day = fmt(now.getDate());
+    const month = fmt(now.getMonth() + 1);
+    const year = now.getFullYear();
+    const hours = fmt(now.getHours());
+    const minutes = fmt(now.getMinutes());
+    const seconds = fmt(now.getSeconds());
+    document.getElementById('digitalDateTime').textContent = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+
+  // Función de voz sintetizada en Español Latino ("Estamos en vivo")
+  function speakLiveVoice() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Detener cualquier locución previa
+      var utterance = new SpeechSynthesisUtterance("Estamos en vivo");
+      utterance.lang = 'es-US'; // Español Latinoamericano
+      utterance.rate = 1.0;
+      utterance.pitch = 1.1;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  function updatePlayState() {
+    if (playing) {
+      cdRecord.classList.add('is-playing');
+      audio.play().catch(e => console.log("Autoplay blocked:", e));
+      speakLiveVoice(); // Reproducir voz latina al iniciar
+    } else {
+      cdRecord.classList.remove('is-playing');
+      audio.pause();
+    }
+  }
+  
+  // Inicialización de arranque
+  updatePlayState();
+
+  document.getElementById('pp').onclick=function(){
+    playing=!playing;
+    updatePlayState();
+  };  
+
+  document.getElementById('st').onclick=function(){
+    playing=false;
+    updatePlayState();
+    audio.currentTime = 0;
+    sec=0;show();cd=10;numEl.textContent=cd;
+  };
+
+  var vol=.8,knob=document.getElementById('knob'),vl=document.getElementById('vol');
+  function setVol(v){
+    vol=Math.max(0,Math.min(1,v));
+    audio.volume = vol;
+    knob.style.setProperty('--r',(vol*270-135+180)+'deg');
+    vl.textContent=vol.toFixed(1);
+  }
+  setVol(.8);
+  knob.addEventListener('wheel',function(e){e.preventDefault();setVol(vol+(e.deltaY<0?.1:-.1));});
+  knob.onclick=function(){setVol(vol>=1?0:vol+.1);};
+
+  let lastTrack = "";
+  function updateMetadata() {
+    $.getJSON('https://radioplayer.webradiodesign.it/libreriaplayer/nowplaying.php?host=149.56.175.167&port=7986&mount=1&strm=shoutcast2', function(data) {
+      if(!data) return;
+      const artist = data[0].trim();
+      const song = data[1].trim();
+      const full = artist + " - " + song;
+
+      if (full !== lastTrack) {
+        lastTrack = full;
+        $('#artistName').text(artist);
+        $('#songTitle').text(song);
+        $('#title').text(full);
+        let query = artist + " " + song;
+        $.ajax({
+          url: "https://itunes.apple.com/search?term=" + encodeURIComponent(query) + "&media=music&limit=1",
+          dataType: "jsonp",
+          success: function(res) {
+            let imgUrl = "http://imgfz.com/i/zEN859j.jpeg";
+            if (res.results.length > 0 && res.results[0].artworkUrl100) {
+              imgUrl = res.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+            }
+            $('#imgTrack, #cdImgTrack').fadeOut(400, function() {
+              $(this).attr('src', imgUrl).fadeIn(400);
+            });
+          }
+        });
+      }
+    });
+  }
+
+  setInterval(updateMetadata, 15000);
+  updateMetadata();
+})();
+</script>
+</body>
+</html>
